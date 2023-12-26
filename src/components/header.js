@@ -1,6 +1,8 @@
 // Header.js
 import React from 'react';
 import {Link } from "react-router-dom";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 const Header = () => {
   return (
     <nav class="sb-topnav navbar navbar-expand navbar-dark bg-primary">
@@ -27,6 +29,7 @@ const Header = () => {
             </ul>
         </li>
     </ul>
+    <ToastContainer />
 </nav>
   );
 };
