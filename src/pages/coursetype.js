@@ -1,11 +1,13 @@
 // src/pages/Home.js
 import React, { useState, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Header from '../components/header';
 import Footer from '../components/footer';
 import Menu from '../components/menu';
+import DataTable from '../components/datatable';
 const CourseType = () => {
     const [courseTypes, setCourseTypes] = useState([]);
   const [newCourseTypeName, setNewCourseTypeName] = useState('');
@@ -18,7 +20,19 @@ const CourseType = () => {
       .then(response => response.json())
       .then(data => setCourseTypes(data))
       .catch(error => console.error('Error:', error));
+    //   handleInputChange('12345');
+    console.log("ss" + newCourseTypeName);
   }, []);
+
+  const fetchData = async () => {
+    try {
+      const response = await fetch('http://localhost:8080/api/courseTypes');
+      const data = await response.json();
+      setCourseTypes(data);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
 
   const handleAddCourseType = async () => {
     try {
@@ -40,31 +54,42 @@ const CourseType = () => {
       console.error('Error:', error);
     }
   };
-
-  const handleUpdateCourseType = async (courseTypeId) => {
-    try {
-      const response = await axios.put(`http://localhost:8080/api/courseTypes/${courseTypeId}`, {
-        typeName: newCourseTypeName,
-      });
-
-      if (response.status === 200) {
-        // Nếu thành công, cập nhật danh sách loại khóa học
-        const updatedCourseTypes = courseTypes.map(courseType =>
-          courseType.courseTypeId === courseTypeId ? response.data : courseType
-        );
-        setCourseTypes(updatedCourseTypes);
-        // Đóng modal cập nhật
-        document.getElementById('idEx1-'+ courseTypeId).click();
-        // Reset giá trị
-        setNewCourseTypeName('');
-         // Hiển thị thông báo thành công
-         toast.success('Thành công!');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-    }
+  const handleUpdateCourseType = async e => {
+    console.log("newCourseTypeName:", newCourseTypeName);
+    console.log("e.original.courseTypeId:", e.original.courseTypeId);
+    //e.preventDefault();
+    // try {
+    //   const response = await axios.put(`http://localhost:8080/api/courseTypes/${e.original.courseTypeId}`, {
+    //     typeName: newCourseTypeName,
+    //   });
+  
+    //   if (response.status === 200) {
+    //     // Nếu thành công, cập nhật danh sách loại khóa học
+    //     const updatedCourseTypes = courseTypes.map(courseType =>
+    //       courseType.courseTypeId === e.original.courseTypeId ? response.data : courseType
+    //     );
+    //     setCourseTypes(updatedCourseTypes);
+    //     // Đóng modal cập nhật
+    //     document.getElementById('idEx1-' + e.original.courseTypeId).click();
+    //     // Reset giá trị
+    //     setNewCourseTypeName('');
+    //     // Hiển thị thông báo thành công
+    //     toast.success('Thành công!');
+    //     fetchData();
+    //   }
+    // } catch (error) {
+    //   console.error('Error:', error);
+    // }
   };
-
+  
+  const handleInputChange = async e => {
+     console.log("New value:", e.target.value);
+     console.log(typeof(e.target.value));
+    //const  delay = (ms) => new Promise(res => setTimeout(res, ms));
+    // await delay(5000);
+    setNewCourseTypeName(e.target.value);
+    console.log("a:", newCourseTypeName);
+  };
   const handleDeleteCourseType = async (courseTypeId) => {
     try {
       await axios.delete(`http://localhost:8080/api/courseTypes/${courseTypeId}`);
@@ -76,10 +101,132 @@ const CourseType = () => {
       document.getElementById('idModelDel-' + courseTypeId).click();
           // Hiển thị thông báo thành công
         toast.success('Thành công!');
+            // Gọi lại hàm fetchData để fetch dữ liệu mới
+        fetchData();
     } catch (error) {
       console.error('Error:', error);
     }
   };
+  //data table
+  const columns = React.useMemo(
+    () => [
+      {
+        Header: 'STT',
+        accessor: (row, index) => index + 1,
+      },
+      {
+        Header: 'Tên',
+        accessor: 'typeName',
+      },
+      {
+        Header: 'Thao tác',
+        accessor: 'courseTypeId',
+        Cell: ({ row }) => (
+            <>
+              <button
+                style={{ width: '100px' }}
+                type="button"
+                className="btn btn-primary"
+                data-bs-toggle="modal"
+                data-bs-target={`#idEx1-${row.original.courseTypeId}`}
+              >
+                Sửa
+              </button>
+              <button
+                type="button"
+                data-bs-toggle="modal"
+                data-bs-target={`#idModelDel-${row.original.courseTypeId}`}
+                style={{ width: '100px', marginLeft : '5px' }}
+                className="btn btn-danger"
+              >
+                Xóa
+              </button>
+    
+              {/* Modal Xóa */}
+              <div className="modal fade" id={`idModelDel-${row.original.courseTypeId}`} tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 className="modal-title" id="exampleModalLabel">Bạn chắc chắn muốn xóa ?</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+    
+                    <div class="modal-body">
+                      Loại khóa học : {row.original.typeName}
+                      <form action="" method="post">
+    
+                        <div class="modal-footer" style={{ marginTop: '20px' }}>
+                          <button style={{ width: '100px' }} type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            Đóng
+                          </button>
+                          <button
+                            type="submit"
+                            className="btn btn-danger"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleDeleteCourseType(row.original.courseTypeId);
+                            }}
+                          >
+                            Xóa
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+    
+              {/* Modal Sửa */}
+              <div className="modal fade" id={`idEx1-${row.original.courseTypeId}`} tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="exampleModalLabel">Cập nhật</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                    <form method="POST" action="" className="register-form" id="register-form">
+          <div className="mb-3">
+            <label htmlFor="category-film" className="col-form-label">Tên loại khóa học:</label>
+            <input
+              type="text"
+              className="form-control"
+              id="typeName"
+              name="TypeName"
+              defaultValue={row.original.typeName}
+              onChange={(e) => {
+                // e.preventDefault();
+                console.log(e.target.value);
+                setNewCourseTypeName(e.target.value);
+                // console.log("newCourseTypeName" + newCourseTypeName);
+              }} 
+              required
+            />
+          </div>
+          <div className="modal-footer">
+            <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">
+              Đóng
+            </button>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              onClick={handleUpdateCourseType}
+            >
+              Lưu
+            </button>
+          </div>
+        </form>
+                    </div>
+
+                </div>
+            </div>
+            </div>
+          </>
+        ),
+      },
+    ],
+    []
+  );
   return (
     <div>
         <Header />
@@ -97,121 +244,7 @@ const CourseType = () => {
                 </button>
             </div>
             <div class="card-body">
-                <table class="table table-bordered">
-                    <thead style={{ color: '#0d6efd' }}>
-                        <tr style={{ backgroundColor: 'darkgrey' }}>
-                            <th>STT</th>
-                            <th>Tên</th>
-                            <th>Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {courseTypes.map((courseType, index) => (
-                        <tr key={index}>
-                            <td style={{ width: '10px' }}>{index + 1}</td>
-                            <td>{courseType.typeName}</td>
-                            <td>
-                                <button
-                                    style={{ width: '100px' }}
-                                    type="button"
-                                    className="btn btn-primary"
-                                    data-bs-toggle="modal"
-                                    data-bs-target={`#idEx1-${courseType.courseTypeId}`}
-                                    onClick={() => setSelectedCourseTypeId(courseType.courseTypeId)}
-                                >
-                                    Sửa
-                                </button>
-                                <button
-                                    type="button"
-                                    data-bs-toggle="modal"
-                                    data-bs-target={`#idModelDel-${courseType.courseTypeId}`}
-                                    style={{ width: '100px' }}
-                                    className="btn btn-danger"
-                                    onClick={() => setSelectedCourseTypeId(courseType.courseTypeId)}
-                                >
-                                    Xóa
-                                </button>
-                                
-                                <div class="modal fade" id={`idModelDel-${courseType.courseTypeId}`} tabindex="-1"
-                                         aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                <h5 className="modal-title" id="exampleModalLabel">Bạn chắc chắn muốn xóa ?</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                            aria-label="Close"></button>
-                                                </div>
-
-                                                <div class="modal-body">
-                                                    Loại khóa học : {courseType.typeName}
-                                                    <form action="" method="post">
-                                                        
-                                                        <div class="modal-footer" style={{ marginTop: '20px' }}>
-                                                            <button style={{ width: '100px' }} type="button" class="btn btn-secondary"
-                                                                    data-bs-dismiss="modal">
-                                                                Đóng
-                                                            </button>
-                                                            <button
-                                                                type="submit"
-                                                                className="btn btn-danger"
-                                                                onClick={(e) => {
-                                                                    e.preventDefault();
-                                                                    handleDeleteCourseType(courseType.courseTypeId);
-                                                                }}
-                                                                >
-                                                                Xóa
-                                                                </button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="modal fade" id={`idEx1-${courseType.courseTypeId}`} tabindex="-1"
-                                 aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title" id="exampleModalLabel">Cập nhật</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                    aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <form method="POST" action="" class="register-form" id="register-form">
-                                        
-                                                <div class="mb-3">
-                                                    <label for="category-film"
-                                                           class="col-form-label">Tên loại khóa học:</label>
-                                                    <input type="text" class="form-control"  id="typeName"
-                                                        name="TypeName"
-                                                        defaultValue={courseType.typeName}
-                                                        onChange={(e) => setNewCourseTypeName(e.target.value)} required/>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary"
-                                                            data-bs-dismiss="modal">
-                                                        Đóng
-                                                    </button>
-                                                    <button type="submit" class="btn btn-primary"
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        handleUpdateCourseType(courseType.courseTypeId);
-                                                    }}>Lưu</button>
-                                                </div>
-                                            </form>
-                                        </div>
-
-                                    </div>
-                                </div>
-                            </div>
-                            </td>
-                        </tr>
-                    ))}
-                                    
-                            
-                    </tbody>
-                </table>
+            <DataTable columns={columns} data={courseTypes} />
             </div>
         </div>
     </div>
@@ -226,37 +259,37 @@ const CourseType = () => {
                         aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form method="POST" class="register-form" id="register-form">
-                    <div class="mb-3">
-                        <label for="category-film"
-                               class="col-form-label">Tên loại khóa học:</label>
-                        <input
-                        type="text"
-                        className="form-control"
-                        id="typeName"
-                        name="TypeName"
-                        value={newCourseTypeName}
-                        onChange={(e) => setNewCourseTypeName(e.target.value)}
-                        required
-                        />
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary"
-                                data-bs-dismiss="modal">
-                            Close
-                        </button>
-                        <button
-                            type="submit"
-                            className="btn btn-primary"
-                            onClick={(e) => {
-                                e.preventDefault();
-                                handleAddCourseType(newCourseTypeName);
-                            }}
-                            >
-                            Lưu
-                            </button>
-                    </div>
-                </form>
+            <form method="POST" className="register-form" id="register-form">
+      <div className="mb-3">
+        <label htmlFor="category-film" className="col-form-label">
+          Tên loại khóa học:
+        </label>
+        <input
+          type="text"
+          className="form-control"
+          id="typeName"
+          name="TypeName"
+          value={newCourseTypeName}
+          onChange={(e) => setNewCourseTypeName(e.target.value)}
+          required
+        />
+      </div>
+      <div className="modal-footer">
+        <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">
+          Close
+        </button>
+        <button
+          type="submit"
+          className="btn btn-primary"
+          onClick={(e) => {
+            e.preventDefault();
+            handleAddCourseType();
+          }}
+        >
+          Lưu
+        </button>
+      </div>
+    </form>
             </div>
 
         </div>
@@ -270,3 +303,5 @@ const CourseType = () => {
 };
 
 export default CourseType;
+// const rootElement = document.getElementById('root');
+// ReactDOM.render(<CourseType />, rootElement);
