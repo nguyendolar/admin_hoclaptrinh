@@ -1,6 +1,6 @@
 // src/pages/Home.js
 import React, { useState, useEffect } from 'react';
-import ReactDOM from 'react-dom';
+import { Modal, Button } from 'react-bootstrap';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -8,11 +8,72 @@ import Header from '../components/header';
 import Footer from '../components/footer';
 import Menu from '../components/menu';
 import DataTable from '../components/datatable';
+const EditForm = ({ course, onSave, onCancel, onUpdate }) => {
+  const [editedTypeName, setEditedTypeName] = useState(course.typeName);
+
+  const handleSave = async () => {
+    try {
+      // Gọi hàm onUpdate để cập nhật thông tin trên server
+      await onUpdate(course.courseTypeId, editedTypeName);
+      // Gọi onSave để lưu thông tin đã chỉnh sửa và đóng form
+      onSave({ ...course, typeName: editedTypeName });
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+  return (
+    <Modal show={true} onHide={onCancel}>
+      <Modal.Header closeButton>
+        <Modal.Title>Cập nhật</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+      <div className="mb-3">
+            <label htmlFor="category-film" className="col-form-label">Tên loại khóa học:</label>
+            <input
+              type="text"
+              className="form-control"
+              value={editedTypeName}
+              onChange={(e) => setEditedTypeName(e.target.value)}
+              required
+            />
+          </div>
+      </Modal.Body>
+      <Modal.Footer>
+      <Button variant="secondary" onClick={onCancel}>
+          Hủy
+        </Button>
+        <Button variant="primary" onClick={handleSave}>
+          Lưu
+        </Button>
+      </Modal.Footer>
+    </Modal>
+  );
+};
 const CourseType = () => {
     const [courseTypes, setCourseTypes] = useState([]);
+    const [editFormOpen, setEditFormOpen] = useState(false);
+    const [selectedCourse, setSelectedCourse] = useState(null);
   const [newCourseTypeName, setNewCourseTypeName] = useState('');
-  const [selectedCourseTypeId, setSelectedCourseTypeId] = useState(null);
+  
+  const handleEditClick = (row) => {
+    // Mở form khi bấm vào nút "Sửa" và truyền đối tượng cần sửa vào state
+    setEditFormOpen(true);
+    setSelectedCourse(row.original);
+  };
 
+  const handleSaveEdit = (editedCourse) => {
+    // Xử lý lưu thông tin đã chỉnh sửa vào đối tượng gốc
+    // (có thể gửi lên server, cập nhật trong danh sách, ...)
+    console.log('Thông tin đã chỉnh sửa:', editedCourse);
+    // Đóng form sau khi lưu
+    setEditFormOpen(false);
+  };
+
+  const handleCancelEdit = () => {
+    // Đóng form khi bấm hủy
+    setEditFormOpen(false);
+  };
 
   useEffect(() => {
     // Gọi API để lấy danh sách loại khóa học
@@ -20,8 +81,6 @@ const CourseType = () => {
       .then(response => response.json())
       .then(data => setCourseTypes(data))
       .catch(error => console.error('Error:', error));
-    //   handleInputChange('12345');
-    console.log("ss" + newCourseTypeName);
   }, []);
 
   const fetchData = async () => {
@@ -54,46 +113,32 @@ const CourseType = () => {
       console.error('Error:', error);
     }
   };
-  const handleUpdateCourseType = async e => {
-    console.log("newCourseTypeName:", newCourseTypeName);
-    console.log("e.original.courseTypeId:", e.original.courseTypeId);
-    //e.preventDefault();
-    // try {
-    //   const response = await axios.put(`http://localhost:8080/api/courseTypes/${e.original.courseTypeId}`, {
-    //     typeName: newCourseTypeName,
-    //   });
   
-    //   if (response.status === 200) {
-    //     // Nếu thành công, cập nhật danh sách loại khóa học
-    //     const updatedCourseTypes = courseTypes.map(courseType =>
-    //       courseType.courseTypeId === e.original.courseTypeId ? response.data : courseType
-    //     );
-    //     setCourseTypes(updatedCourseTypes);
-    //     // Đóng modal cập nhật
-    //     document.getElementById('idEx1-' + e.original.courseTypeId).click();
-    //     // Reset giá trị
-    //     setNewCourseTypeName('');
-    //     // Hiển thị thông báo thành công
-    //     toast.success('Thành công!');
-    //     fetchData();
-    //   }
-    // } catch (error) {
-    //   console.error('Error:', error);
-    // }
+  const handleUpdateCourseType = async (courseTypeId, newTypeName) => {
+    try {
+      const response = await axios.put(`http://localhost:8080/api/courseTypes/${courseTypeId}`, {
+        typeName: newTypeName,
+      });
+
+      if (response.status === 200) {
+        // Nếu thành công, cập nhật danh sách loại khóa học
+        const updatedCourseTypes = courseTypes.map((courseType) =>
+          courseType.courseTypeId === courseTypeId ? response.data : courseType
+        );
+        setCourseTypes(updatedCourseTypes);
+        // Hiển thị thông báo thành công
+        toast.success('Thành công!');
+        fetchData();
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
   };
-  
-  const handleInputChange = async e => {
-     console.log("New value:", e.target.value);
-     console.log(typeof(e.target.value));
-    //const  delay = (ms) => new Promise(res => setTimeout(res, ms));
-    // await delay(5000);
-    setNewCourseTypeName(e.target.value);
-    console.log("a:", newCourseTypeName);
-  };
+
   const handleDeleteCourseType = async (courseTypeId) => {
     try {
-      await axios.delete(`http://localhost:8080/api/courseTypes/${courseTypeId}`);
-
+      const response = await axios.delete(`http://localhost:8080/api/courseTypes/${courseTypeId}`);
+      if (response.data === true){
       // Nếu thành công, cập nhật danh sách loại khóa học
       const updatedCourseTypes = courseTypes.filter(courseType => courseType.courseTypeId !== courseTypeId);
       setCourseTypes(updatedCourseTypes);
@@ -103,6 +148,12 @@ const CourseType = () => {
         toast.success('Thành công!');
             // Gọi lại hàm fetchData để fetch dữ liệu mới
         fetchData();
+      } else {
+        // Đóng modal xóa
+        document.getElementById('idModelDel-' + courseTypeId).click();
+        // Nếu API trả về false, hiển thị toast thất bại
+        toast.error('Thất bại!');
+      }
     } catch (error) {
       console.error('Error:', error);
     }
@@ -124,14 +175,13 @@ const CourseType = () => {
         Cell: ({ row }) => (
             <>
               <button
-                style={{ width: '100px' }}
-                type="button"
-                className="btn btn-primary"
-                data-bs-toggle="modal"
-                data-bs-target={`#idEx1-${row.original.courseTypeId}`}
+              style={{ width: '100px' }}
+              type="button"
+              className="btn btn-primary"
+              onClick={() => handleEditClick(row)}
               >
-                Sửa
-              </button>
+              Sửa
+            </button>
               <button
                 type="button"
                 data-bs-toggle="modal"
@@ -175,52 +225,6 @@ const CourseType = () => {
                   </div>
                 </div>
               </div>
-    
-              {/* Modal Sửa */}
-              <div className="modal fade" id={`idEx1-${row.original.courseTypeId}`} tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                  <div class="modal-content">
-                    <div class="modal-header">
-                      <h5 class="modal-title" id="exampleModalLabel">Cập nhật</h5>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                    <form method="POST" action="" className="register-form" id="register-form">
-          <div className="mb-3">
-            <label htmlFor="category-film" className="col-form-label">Tên loại khóa học:</label>
-            <input
-              type="text"
-              className="form-control"
-              id="typeName"
-              name="TypeName"
-              defaultValue={row.original.typeName}
-              onChange={(e) => {
-                // e.preventDefault();
-                console.log(e.target.value);
-                setNewCourseTypeName(e.target.value);
-                // console.log("newCourseTypeName" + newCourseTypeName);
-              }} 
-              required
-            />
-          </div>
-          <div className="modal-footer">
-            <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">
-              Đóng
-            </button>
-            <button
-              type="submit"
-              className="btn btn-primary"
-              onClick={handleUpdateCourseType}
-            >
-              Lưu
-            </button>
-          </div>
-        </form>
-                    </div>
-
-                </div>
-            </div>
-            </div>
           </>
         ),
       },
@@ -245,6 +249,15 @@ const CourseType = () => {
             </div>
             <div class="card-body">
             <DataTable columns={columns} data={courseTypes} />
+            {/* Hiển thị form sửa khi editFormOpen là true */}
+            {editFormOpen && (
+              <EditForm
+                course={selectedCourse}
+                onSave={handleSaveEdit}
+                onCancel={handleCancelEdit}
+                onUpdate={handleUpdateCourseType}
+              />
+            )}
             </div>
         </div>
     </div>
