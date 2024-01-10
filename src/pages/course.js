@@ -9,36 +9,126 @@ import Footer from '../components/footer'
 import Menu from '../components/menu'
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css'; // Import CSS styles for the editor
-const EditForm = ({ course, onSave, onCancel, onUpdate }) => {
-  const [editedTypeName, setEditedTypeName] = useState(course.typeName);
+const EditForm = ({ course, courseTypes, onSave, onCancel, onUpdate }) => {
+  //const [editedTypeName, setEditedTypeName] = useState(course.typeName);
+  const emptyFile = new File([], "filename.txt", { type: "text/plain" });
+  const [editCourse, setEditCourse] = useState({
+    CourseName: course.courseName,
+    Price: course.price,
+    CourseTypeId: course.courseType.courseTypeId,
+    file: emptyFile,
+    Description: course.description,
+  });
+
+  const handleInputChange = (e) => {
+    const { name, value, type, files } = e.target;
+    console.log("sss:", e);
+    setEditCourse((prevCourse) => ({
+      ...prevCourse,
+      [name]: type === 'file' ? files[0] : value,
+    }));
+  };
 
   const handleSave = async () => {
     try {
       // Gọi hàm onUpdate để cập nhật thông tin trên server
-      await onUpdate(course.courseId, editedTypeName);
+      await onUpdate(course.courseId, editCourse);
       // Gọi onSave để lưu thông tin đã chỉnh sửa và đóng form
-      onSave({ ...course, typeName: editedTypeName });
+      onSave({ ...course, typeName: editCourse });
     } catch (error) {
       console.error('Error:', error);
     }
   };
 
   return (
-    <Modal show={true} onHide={onCancel}>
+    <Modal show={true} onHide={onCancel} size="xl">
       <Modal.Header closeButton>
         <Modal.Title>Cập nhật</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-      <div className="mb-3">
-            <label htmlFor="category-film" className="col-form-label">Tên loại khóa học:</label>
-            <input
-              type="text"
-              className="form-control"
-              value={editedTypeName}
-              onChange={(e) => setEditedTypeName(e.target.value)}
-              required
-            />
-          </div>
+      <div className="col">
+  <div className="row">
+    <div className="col-6 mb-3">
+      <label htmlFor="category-film" className="col-form-label">
+        Tên khóa học:
+      </label>
+      <input
+        type="text"
+        className="form-control"
+        id="category-film"
+        name="CourseName"
+        value={editCourse.CourseName}
+        onChange={handleInputChange}
+        required
+      />
+    </div>
+    <div className="col-6 mb-3">
+      <label htmlFor="category-film" className="col-form-label">
+        Giá:
+      </label>
+      <input
+        type="number"
+        className="form-control"
+        id="category-film"
+        name="Price"
+        min="0"
+        value={editCourse.Price}
+        onChange={handleInputChange}
+      />
+    </div>
+  </div>
+  <div className="row">
+    <div className="col-6 mb-3">
+      <label htmlFor="category-film" className="col-form-label">
+        Danh mục khóa học:
+      </label>
+      <select
+        className="form-select"
+        aria-label="Default select example"
+        id="theloai"
+        tabIndex="8"
+        name="CourseTypeId"
+        value={editCourse.CourseTypeId}
+        onChange={handleInputChange}
+        required
+      >
+        {courseTypes.map((courseType) => (
+          <option key={courseType.courseTypeId} value={courseType.courseTypeId} selected={courseType.courseTypeId === editCourse.CourseTypeId}>
+            {courseType.typeName}
+          </option>
+        ))}
+      </select>
+    </div>
+    <div className="col-6 mb-3">
+      <label htmlFor="category-film" className="col-form-label">
+        Ảnh:
+      </label>
+      <br />
+      <input
+        type="file"
+        name="file"
+        className="form-control-file"
+        id="exampleFormControlFile1"
+        onChange={handleInputChange}
+      />
+    </div>
+  </div>
+  <div className="row">
+    <div className="col-12 mb-3">
+      <label htmlFor="category-film" className="col-form-label">
+        Mô tả:
+      </label>
+      <ReactQuill
+        id="editor"
+        value={editCourse.Description}
+        onChange={(value) => setEditCourse((prevCourse) => ({ ...prevCourse, Description: value }))}
+        placeholder="Nhập nội dung ở đây..."
+        style={{ height: '400px' }}
+      />
+    </div>
+  </div>
+</div>
+
       </Modal.Body>
       <Modal.Footer>
       <Button variant="secondary" onClick={onCancel}>
@@ -173,26 +263,36 @@ const Course = () => {
     }
   };
   
-  const handleUpdateCourse = async (courseId, newName) => {
+  const handleUpdateCourse = async (courseId, editCourse) => {
     try {
-      const response = await axios.put(`http://localhost:8080/api/courseTypes/${courseId}`, {
-        name: newName,
+      const formData = new FormData();
+      formData.append('CourseName', editCourse.CourseName);
+      formData.append('Price', editCourse.Price);
+      formData.append('file', editCourse.file);
+      formData.append('CourseTypeId', editCourse.CourseTypeId);
+      formData.append('Description', editCourse.Description);
+  
+      const response = await axios.put(`http://localhost:8080/api/courses/${courseId}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
-
+  
       if (response.status === 200) {
-        // Nếu thành công, cập nhật danh sách loại khóa học
-        const updatedCourseTypes = courses.map((courseType) =>
-          courseType.courseId === courseId ? response.data : courseType
-        );
-        setCourses(updatedCourseTypes);
+        // Nếu thành công, cập nhật danh sách khóa học
+        fetchData();
         // Hiển thị thông báo thành công
         toast.success('Thành công!');
-        fetchData();
       }
     } catch (error) {
       console.error('Error:', error);
+      // Đóng modal cập nhật
+      document.getElementById(`idEx1-${editCourse.courseId}`).click();
+      // Hiển thị thông báo lỗi
+      toast.error('Đã xảy ra lỗi khi cập nhật khóa học.');
     }
   };
+  
 
   const handleDeleteCourse = async (courseId) => {
     try {
@@ -365,6 +465,15 @@ const Course = () => {
                 </div>
                 <div class="card-body">
                 <DataTable columns={columns} data={courses} />
+                {editFormOpen && (
+              <EditForm
+                course={selectedCourse}
+                courseTypes={courseTypes}
+                onSave={handleSaveEdit}
+                onCancel={handleCancelEdit}
+                onUpdate={handleUpdateCourse}
+                />
+                )}
                 </div>
               </div>
             </div>
