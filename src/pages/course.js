@@ -10,7 +10,6 @@ import Menu from '../components/menu'
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css'; // Import CSS styles for the editor
 const EditForm = ({ course, courseTypes, onSave, onCancel, onUpdate }) => {
-  //const [editedTypeName, setEditedTypeName] = useState(course.typeName);
   const emptyFile = new File([], "filename.txt", { type: "text/plain" });
   const [editCourse, setEditCourse] = useState({
     CourseName: course.courseName,
@@ -145,9 +144,6 @@ const Course = () => {
   const [courses, setCourses] = useState([]);
   const [editFormOpen, setEditFormOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
-  const [newCourseName, setNewCourseName] = useState(''); 
-  // Thêm state để lưu trữ file đã chọn
-  const [selectedFile, setSelectedFile] = useState(null);
   const [newCourse, setNewCourse] = useState({
     CourseName: '',
     Price: 0,
@@ -169,11 +165,6 @@ const Course = () => {
     console.log('Thông tin đã chỉnh sửa:', editedCourse);
     // Đóng form sau khi lưu
     setEditFormOpen(false);
-  };
-
-  // Hàm xử lý khi file thay đổi
-  const handleFileChange = (e) => {
-    setSelectedFile(e.target.files[0]);
   };
 
   const handleCancelEdit = () => {

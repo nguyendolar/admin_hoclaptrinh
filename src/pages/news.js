@@ -9,7 +9,7 @@ import Footer from '../components/footer'
 import Menu from '../components/menu'
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css'; // Import CSS styles for the editor
-const EditForm = ({ course, courseTypes, onSave, onCancel, onUpdate }) => {
+const EditForm = ({ course, onSave, onCancel, onUpdate }) => {
   //const [editedTypeName, setEditedTypeName] = useState(course.typeName);
   const emptyFile = new File([], "filename.txt", { type: "text/plain" });
   const [editCourse, setEditCourse] = useState({
@@ -30,7 +30,7 @@ const EditForm = ({ course, courseTypes, onSave, onCancel, onUpdate }) => {
   const handleSave = async () => {
     try {
       // Gọi hàm onUpdate để cập nhật thông tin trên server
-      await onUpdate(course.courseId, editCourse);
+      await onUpdate(course.newsId, editCourse);
       // Gọi onSave để lưu thông tin đã chỉnh sửa và đóng form
       onSave({ ...course, typeName: editCourse });
     } catch (error) {
@@ -46,9 +46,9 @@ const EditForm = ({ course, courseTypes, onSave, onCancel, onUpdate }) => {
       <Modal.Body>
       <div className="col">
   <div className="row">
-    <div className="col-6 mb-3">
+    <div className="col-12 mb-3">
       <label htmlFor="category-film" className="col-form-label">
-        Tên tin tức:
+        Tiêu đề:
       </label>
       <input
         type="text"
@@ -60,44 +60,9 @@ const EditForm = ({ course, courseTypes, onSave, onCancel, onUpdate }) => {
         required
       />
     </div>
-    <div className="col-6 mb-3">
-      <label htmlFor="category-film" className="col-form-label">
-        Giá:
-      </label>
-      <input
-        type="number"
-        className="form-control"
-        id="category-film"
-        name="Price"
-        min="0"
-        value={editCourse.Price}
-        onChange={handleInputChange}
-      />
-    </div>
   </div>
   <div className="row">
-    <div className="col-6 mb-3">
-      <label htmlFor="category-film" className="col-form-label">
-        Danh mục tin tức:
-      </label>
-      <select
-        className="form-select"
-        aria-label="Default select example"
-        id="theloai"
-        tabIndex="8"
-        name="CourseTypeId"
-        value={editCourse.CourseTypeId}
-        onChange={handleInputChange}
-        required
-      >
-        {courseTypes.map((courseType) => (
-          <option key={courseType.courseTypeId} value={courseType.courseTypeId} selected={courseType.courseTypeId === editCourse.CourseTypeId}>
-            {courseType.typeName}
-          </option>
-        ))}
-      </select>
-    </div>
-    <div className="col-6 mb-3">
+    <div className="col-12 mb-3">
       <label htmlFor="category-film" className="col-form-label">
         Ảnh:
       </label>
@@ -114,7 +79,7 @@ const EditForm = ({ course, courseTypes, onSave, onCancel, onUpdate }) => {
   <div className="row">
     <div className="col-12 mb-3">
       <label htmlFor="category-film" className="col-form-label">
-        Mô tả:
+        Nội dung:
       </label>
       <ReactQuill
         id="editor"
@@ -143,15 +108,12 @@ const News = () => {
   const [courses, setCourses] = useState([]);
   const [editFormOpen, setEditFormOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
-  const [newCourseName, setNewCourseName] = useState(''); 
-  // Thêm state để lưu trữ file đã chọn
-  const [selectedFile, setSelectedFile] = useState(null);
+  
   const [newCourse, setNewCourse] = useState({
     CourseName: '',
     file: null,
     Description: '',
   });
-  const [courseTypes, setCourseTypes] = useState([]);
 
   const handleEditClick = (row) => {
     // Mở form khi bấm vào nút "Sửa" và truyền đối tượng cần sửa vào state
@@ -167,10 +129,6 @@ const News = () => {
     setEditFormOpen(false);
   };
 
-  // Hàm xử lý khi file thay đổi
-  const handleFileChange = (e) => {
-    setSelectedFile(e.target.files[0]);
-  };
 
   const handleCancelEdit = () => {
     // Đóng form khi bấm hủy
@@ -247,12 +205,10 @@ const News = () => {
     try {
       const formData = new FormData();
       formData.append('CourseName', editCourse.CourseName);
-      formData.append('Price', editCourse.Price);
       formData.append('file', editCourse.file);
-      formData.append('CourseTypeId', editCourse.CourseTypeId);
       formData.append('Description', editCourse.Description);
   
-      const response = await axios.put(`http://localhost:8080/api/courses/${courseId}`, formData, {
+      const response = await axios.put(`http://localhost:8080/api/news/${courseId}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -267,7 +223,7 @@ const News = () => {
     } catch (error) {
       console.error('Error:', error);
       // Đóng modal cập nhật
-      document.getElementById(`idEx1-${editCourse.courseId}`).click();
+      document.getElementById(`idEx1-${editCourse.newsId}`).click();
       // Hiển thị thông báo lỗi
       toast.error('Đã xảy ra lỗi khi cập nhật tin tức.');
     }
@@ -276,10 +232,10 @@ const News = () => {
 
   const handleDeleteCourse = async (courseId) => {
     try {
-      const response = await axios.delete(`http://localhost:8080/api/courses/${courseId}`);
-      if (response.data === true){
+      const response = await axios.delete(`http://localhost:8080/api/news/${courseId}`);
+      if (response.status === 200){
       // Nếu thành công, cập nhật danh sách loại tin tức
-      const updatedCourses= courses.filter(course => course.courseId !== courseId);
+      const updatedCourses= courses.filter(course => course.newsId !== courseId);
       setCourses(updatedCourses);
       // Đóng modal xóa
       document.getElementById('idModelDel-' + courseId).click();
@@ -362,15 +318,6 @@ const News = () => {
         Cell: ({ row }) => (
             <>
               <button
-                type="button"
-                data-bs-toggle="modal"
-                data-bs-target={`#idModelDes-${row.original.courseId}`}
-                style={{ width: '100px', marginRight : '5px' }}
-                className="btn btn-warning"
-              >
-                Mô tả
-              </button>
-              <button
               style={{ width: '100px' }}
               type="button"
               className="btn btn-primary"
@@ -381,34 +328,15 @@ const News = () => {
               <button
                 type="button"
                 data-bs-toggle="modal"
-                data-bs-target={`#idModelDel-${row.original.courseId}`}
+                data-bs-target={`#idModelDel-${row.original.newsId}`}
                 style={{ width: '100px', marginLeft : '5px' }}
                 className="btn btn-danger"
               >
                 Xóa
               </button>
-              {/* Modal Mô tả */}
-              <div className="modal fade" id={`idModelDes-${row.original.courseId}`} tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-xl">
-                  <div class="modal-content">
-                    <div class="modal-header">
-                      <h5 className="modal-title" id="exampleModalLabel">{row.original.courseName}</h5>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-    
-                    <div class="modal-body">
-                      <div dangerouslySetInnerHTML={{ __html: row.original.description }} />
-                        <div class="modal-footer">
-                          <button style={{ width: '100px' }} type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                            Đóng
-                          </button>
-                        </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+
               {/* Modal Xóa */}
-              <div className="modal fade" id={`idModelDel-${row.original.courseId}`} tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+              <div className="modal fade" id={`idModelDel-${row.original.newsId}`} tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                 <div class="modal-dialog">
                   <div class="modal-content">
                     <div class="modal-header">
@@ -417,7 +345,7 @@ const News = () => {
                     </div>
     
                     <div class="modal-body">
-                      tin tức : {row.original.courseName}
+                      Tin tức : {row.original.title}
                       <form action="" method="post">
     
                         <div class="modal-footer" style={{ marginTop: '20px' }}>
@@ -429,7 +357,7 @@ const News = () => {
                             className="btn btn-danger"
                             onClick={(e) => {
                               e.preventDefault();
-                              handleDeleteCourse(row.original.courseId);
+                              handleDeleteCourse(row.original.newsId);
                             }}
                           >
                             Xóa
@@ -471,7 +399,6 @@ const News = () => {
                 {editFormOpen && (
               <EditForm
                 course={selectedCourse}
-                courseTypes={courseTypes}
                 onSave={handleSaveEdit}
                 onCancel={handleCancelEdit}
                 onUpdate={handleUpdateCourse}
@@ -488,7 +415,7 @@ const News = () => {
             aria-labelledby="exampleModalLabel"
             aria-hidden="true"
           >
-            <div class="modal-dialog modal-lg">
+            <div class="modal-dialog modal-xl">
               <div class="modal-content">
                 <div class="modal-header">
                   <h5 class="modal-title" id="exampleModalLabel">
@@ -545,7 +472,7 @@ const News = () => {
   <div className="row">
     <div className="col-12 mb-3">
       <label htmlFor="category-film" className="col-form-label">
-        Mô tả:
+        Nội dung:
       </label>
       <ReactQuill
         id="editor"
