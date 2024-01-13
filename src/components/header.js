@@ -1,9 +1,14 @@
 // Header.js
 import React from 'react';
-import {Link } from "react-router-dom";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { Link, useNavigate } from "react-router-dom";
 const Header = () => {
+    const navigate = useNavigate();
+    const onLogout = () => {
+        localStorage.removeItem("tokenAdmin");
+        navigate("/authen");
+    }
   return (
     <nav class="sb-topnav navbar navbar-expand navbar-dark bg-primary">
     <a href="/" className="navbar-brand ps-3" style={{
@@ -25,7 +30,7 @@ const Header = () => {
             <a style={{ color: 'white' }} class="nav-link dropdown-toggle" id="navbarDropdown" href="/" role="button" data-bs-toggle="dropdown"
                aria-expanded="false"><i class="fas fa-user fa-fw"></i>Lê Văn A</a>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                <li><Link to="/authen" class="dropdown-item">Đăng xuất</Link></li>
+                <li><button type='button' onClick={() => onLogout()} class="dropdown-item">Đăng xuất</button></li>
             </ul>
         </li>
     </ul>

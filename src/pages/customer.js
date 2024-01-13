@@ -7,11 +7,21 @@ import DataTable from '../components/datatable';
 import Header from '../components/header'
 import Footer from '../components/footer'
 import Menu from '../components/menu'
+import { Link, useNavigate } from "react-router-dom";
 import 'react-quill/dist/quill.snow.css'; // Import CSS styles for the editor
 
 const Customer = () => {
   const [courses, setCourses] = useState([]);
+  const navigate = useNavigate();
 
+  React.useEffect(() => {
+      let token = localStorage.getItem("tokenAdmin");
+      console.log("token", token);
+      if (token == null)
+      {
+          navigate("/authen");
+      } 
+  }, [])
   useEffect(() => {
     // Gọi API để lấy danh sách khách hàng
     fetch('http://localhost:8080/api/news/customer')

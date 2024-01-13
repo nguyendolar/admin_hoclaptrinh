@@ -7,6 +7,7 @@ import DataTable from '../components/datatable';
 import Header from '../components/header'
 import Footer from '../components/footer'
 import Menu from '../components/menu'
+import { Link, useNavigate } from "react-router-dom";
 import 'react-quill/dist/quill.snow.css'; // Import CSS styles for the editor
 const EditForm = ({ course, courseTypes, onSave, onCancel, onUpdate }) => {
   const [editCourse, setEditCourse] = useState({
@@ -14,7 +15,16 @@ const EditForm = ({ course, courseTypes, onSave, onCancel, onUpdate }) => {
     CourseTypeId: course.course.courseId,
     Description: course.videoUrl,
   });
+  const navigate = useNavigate();
 
+  React.useEffect(() => {
+      let token = localStorage.getItem("tokenAdmin");
+      console.log("token", token);
+      if (token == null )
+      {
+          navigate("/authen");
+      }
+  }, [])
   const handleInputChange = (e) => {
     const { name, value, type, files } = e.target;
     console.log("sss:", e);

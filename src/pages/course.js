@@ -8,6 +8,7 @@ import Header from '../components/header'
 import Footer from '../components/footer'
 import Menu from '../components/menu'
 import ReactQuill from 'react-quill';
+import { Link, useNavigate } from "react-router-dom";
 import 'react-quill/dist/quill.snow.css'; // Import CSS styles for the editor
 const EditForm = ({ course, courseTypes, onSave, onCancel, onUpdate }) => {
   const emptyFile = new File([], "filename.txt", { type: "text/plain" });
@@ -152,7 +153,16 @@ const Course = () => {
     Description: '',
   });
   const [courseTypes, setCourseTypes] = useState([]);
+  const navigate = useNavigate();
 
+  React.useEffect(() => {
+      let token = localStorage.getItem("tokenAdmin");
+      console.log("token", token);
+      if (token == null)
+      {
+          navigate("/authen");
+      } 
+  }, [])
   const handleEditClick = (row) => {
     // Mở form khi bấm vào nút "Sửa" và truyền đối tượng cần sửa vào state
     setEditFormOpen(true);

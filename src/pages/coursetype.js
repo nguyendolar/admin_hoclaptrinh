@@ -8,6 +8,7 @@ import Header from '../components/header';
 import Footer from '../components/footer';
 import Menu from '../components/menu';
 import DataTable from '../components/datatable';
+import { Link, useNavigate } from "react-router-dom";
 const EditForm = ({ course, onSave, onCancel, onUpdate }) => {
   const [editedTypeName, setEditedTypeName] = useState(course.typeName);
 
@@ -54,8 +55,17 @@ const CourseType = () => {
     const [courseTypes, setCourseTypes] = useState([]);
     const [editFormOpen, setEditFormOpen] = useState(false);
     const [selectedCourse, setSelectedCourse] = useState(null);
-  const [newCourseTypeName, setNewCourseTypeName] = useState('');
-  
+    const [newCourseTypeName, setNewCourseTypeName] = useState('');
+    const navigate = useNavigate();
+
+  React.useEffect(() => {
+      let token = localStorage.getItem("tokenAdmin");
+      console.log("token", token);
+      if (token == null)
+      {
+          navigate("/authen");
+      } 
+  }, [])
   const handleEditClick = (row) => {
     // Mở form khi bấm vào nút "Sửa" và truyền đối tượng cần sửa vào state
     setEditFormOpen(true);
