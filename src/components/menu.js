@@ -13,22 +13,22 @@ const Menu = () => {
                 </Link>
                 <hr />
                 <Link to="/course" class="nav-link">
-                    <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
+                    <div class="sb-nav-link-icon"><i class="fas fa-external-link-alt"></i></div>
                     Khóa học
                 </Link>
                 <hr />
                 <Link to="/video" class="nav-link">
-                    <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
+                    <div class="sb-nav-link-icon"><i class="fas fa-clock"></i></div>
                     Video khóa học
                 </Link>
                 <hr />
                 <Link to="/customer" class="nav-link">
-                    <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
+                    <div class="sb-nav-link-icon"><i class="fas fa-user"></i></div>
                      Khách hàng
                 </Link>
                 <hr />
                 <Link to="/news" class="nav-link">
-                    <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
+                    <div class="sb-nav-link-icon"><i class="fas fa-chart-bar"></i></div>
                     Tin tức
                 </Link>
 

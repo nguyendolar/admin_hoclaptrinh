@@ -15,6 +15,7 @@ const Home = ({ setIsAuthenticated }) => {
         {
             navigate("/authen");
         } 
+        navigate("/course");
     }, [])
   return (
     <div>
@@ -23,9 +24,6 @@ const Home = ({ setIsAuthenticated }) => {
         <Menu />
         <div id="layoutSidenav_content">
         <main>
-            <div class="container-fluid px-4">
-                <h2>Xin chào mọi người</h2>
-            </div>
         </main>
             <Footer />
         </div>
